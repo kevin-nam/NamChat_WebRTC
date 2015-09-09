@@ -1,0 +1,189 @@
+<html>
+<head>
+<title> NamChat </title>
+
+<script>
+ (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+ 	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		 m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+				  ga('create', 'UA-60399574-1', 'auto');
+					  ga('send', 'pageview');
+
+</script>
+
+
+<script src='/RTCMultiConnection.js'></script>
+<script src='bower_components/jquery/dist/jquery.min.js'></script>
+<script src="bower_components/jquery-ui/jquery-ui.min.js"></script>
+<script src='bower_components/bootstrap/dist/js/bootstrap.min.js'></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+<link rel="stylesheet" href='styles.css'></script>
+<script src="ScrollToFixed/jquery-scrolltofixed-min.js"></script>
+
+<head>
+
+<body>
+	<div class="container text-center Aligner-item">
+	<h1>NamChat</h1>
+	<p>Simple, easy and free video chat!</p>
+	</div>
+
+<div class="jumbotron Aligner" id="main">
+	<div class="container text-center Aligner-item">
+		<div id="videos"></div>
+		<div id="message">
+		<!--		<p><input type="text" placeholder="Your message" name="msg" id="msg">
+				<button class="btn btn-success" id="send">Send!</button></p> -->
+		</div>
+		<div id="link"></div>
+			<div id="buttons">
+				<p> Enter a Room Name: </p>
+				<p><input type="text" placeholder="Room Name" name="room" id="room"></p>
+				<p><button class="btn btn-success" id="open">Create Room!</button></p>
+			</div>
+		</div>
+</div>
+
+<div class="footer">
+	<p id="numUsers"></p>
+	<p> Made by <a href="http://kevinnam.me">Kevin Nam</a> (2015). All rights reserved.</p>
+
+</div>
+
+</body>
+
+<script>
+	$(document).ready(function(){
+	
+		//$('#message').hide();
+		//$('#message').scrollToFixed({ bottom: 89 });
+		
+		//Establishing connection
+		console.log("Ready");
+		var connection = new RTCMultiConnection('chatnam');
+		connection.session = {
+			audio:true,
+			video:true,
+			data:true
+		};
+
+		//Messaging
+		$("#send").click(function(){
+			console.log("Sending message: " + $('#msg').val());
+			connection.send({
+				message: $('#msg').val()
+			});
+		});
+
+		connection.onmessage = function(e){
+			//if(e.original.substring()
+			console.log(e.message);
+			console.log("Message received");
+		};
+		
+
+	//onstream event
+		connection.onstream = function(e) {
+			$('#videos').append(e.mediaElement);
+			//$("#videos").draggable();
+		};
+		
+		//Number of connected users
+	/*	connection.numberOfConnectedUsers++;
+		$("#numUsers").append(connection.numberOfConnectedUsers + " people are NamChatting!");
+	*/
+	
+		//CHECK IF IN ROOM
+		var isRoom = window.location.search.substring(1);
+		//console.log("isRoom === " + isRoom);
+
+		//JOINING ROOM
+		if(isRoom){
+			$("#message").show();	
+			$("#link").append("<p><b> NamChat with friends by sending them this link: </b>" + window.location.href + "</p>");
+			var SIGNALING_SERVER = 'ws://kevinnam.me:8000';
+			var websocket = new WebSocket(SIGNALING_SERVER);
+			$('#buttons').hide();
+			console.log("Joining " + isRoom + " room...");
+			//connection.join(isRoom);
+			connection.join({
+				sessionid: isRoom,
+				userid: isRoom,
+				//extra: {},
+				session: connection.session
+			});
+			connection.sessionid = isRoom;
+			console.log("#####Session id: " + connection.sessionid + ", " + connection.channel);
+				websocket.onopen = function(){
+				websocket.send(JSON.stringify({
+					checkPresence: true,
+					channel: isRoom
+					}));
+				}
+	   }
+	
+		//CREATING ROOM
+		$("#open").click(function(){
+			$("#message").show();
+			var SIGNALING_SERVER = 'ws://kevinnam.me:8000';
+			var websocket = new WebSocket(SIGNALING_SERVER);
+			var roomName = $('#room').val();
+			websocket.onmessage = function(event) {
+					connection.isInitiator = true;
+					connection.userid = roomName;
+					connection.open({
+						sessionid: roomName,
+						dontTransmit: true,
+					});
+					//connection.channel = roomName;
+					console.log("Creating " + roomName + " room...");
+					console.log("roomid === " + connection.channel);
+					console.log("sessionid === " + connection.sessionid);
+					$("#buttons").hide();
+					$("#link").append("<p><b> NamChat with friends by sending them this link: </b>" + window.location.href + "?" + roomName + "</p>");
+				}
+			websocket.onopen = function(){
+				websocket.send(JSON.stringify({
+					checkPresence: true,
+					channel: 'chatnam'
+					}));
+				}
+			});
+		
+
+	// Signaling Server
+	// Enable WEBSOCKET to NODEJS
+	var SIGNALING_SERVER = 'ws://kevinnam.me:8000';
+	connection.openSignalingChannel = function(config) {
+		config.channel = config.channel || this.channel;
+		var websocket = new WebSocket(SIGNALING_SERVER);
+    websocket.channel = config.channel;
+	  websocket.onopen = function() {
+			websocket.push(JSON.stringify({
+			 open: true,
+			 channel: config.channel
+  	  }));
+	  if (config.callback)	
+			config.callback(websocket);
+		};							
+		websocket.onmessage = function(event) {	
+	 		config.onmessage(JSON.parse(event.data));
+		 };
+		websocket.push = websocket.send;
+		websocket.send = function(data) {
+			websocket.push(JSON.stringify({	
+				data: data,
+				channel: config.channel
+				}));
+			};
+			
+		}
+
+	connection.customStreams = { };
+
+	});
+</script>
+
+
+</html>

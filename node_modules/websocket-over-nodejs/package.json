@@ -1,0 +1,44 @@
+{
+  "name": "websocket-over-nodejs",
+  "preferGlobal": true,
+  "version": "0.0.2",
+  "author": {
+    "name": "Muaz Khan",
+    "email": "muazkh@gmail.com"
+  },
+  "description": "WebSocket-over-Nodejs for WebRTC Experiments: https://www.webrtc-experiment.com",
+  "contributors": [
+    {
+      "name": "Muaz Khan",
+      "email": "muazkh@gmail.com"
+    }
+  ],
+  "scripts": {
+    "start": "node signaler.js"
+  },
+  "main": "signaler.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/muaz-khan/WebRTC-Experiment.git"
+  },
+  "keywords": [
+    "webrtc-signaling",
+    "websocket-over-nodejs"
+  ],
+  "analyze": false,
+  "license": "MIT",
+  "engines": {
+    "node": ">=0.6"
+  },
+  "dependencies": {
+    "websocket": "1.0.x"
+  },
+  "bugs": {
+    "url": "https://github.com/muaz-khan/WebRTC-Experiment/issues"
+  },
+  "homepage": "https://github.com/muaz-khan/WebRTC-Experiment",
+  "_id": "websocket-over-nodejs@0.0.2",
+  "_from": "websocket-over-nodejs@",
+  "readme": "#### [WebSocket over Node.js](https://github.com/muaz-khan/WebRTC-Experiment/blob/master/websocket-over-nodejs) / [Demo](https://www.webrtc-experiment.com/websocket/)\n\nThis repository has following kinds of browser-based demos:\n\n1. Text Chat using rooms\n2. Text Chat without rooms\n3. WebRTC Peer Connection using rooms\n\nYou can see three node.js files:\n\n1. signaler.js - HTTP based websocket signaling along with creating websocket channels i.e. rooms\n2. ssl.js - HTTPs i.e. SSL based websocket signaling along with creating websocket channels i.e. rooms\n3. simple.js - HTTP based websocket signaling however NO-room\n\n=\n\n#### Dependencies\n\n1. WebSocket - for websocket over node.js connection\n2. Node-Static - for serving static resources i.e. HTML/CSS/JS files\n\n=\n\n#### Install via `npm`\n\n```\nnpm install websocket-over-nodejs\n```\n\nand run the `signaler.js` nodejs file:\n\n```\nnode node_modules/websocket-over-nodejs/signaler.js\n```\n\nNow, you can open port \"12034\" on your ip address/domain; or otherwise on localhost: `http://localhost:12034/`\n\n=\n\n#### Install on Linux/Ubuntu/CentOS/Debian/Mac etc.\n\n```\n# create a directory\nmkdir websocket-over-nodejs\n\n# open directory\ncd websocket-over-nodejs\n\n# get package\nwget http://www.webrtc-experiment.com/packages/websocket-over-nodejs.tar\n\n# extract package\ntar -xf websocket-over-nodejs.tar\n\n# run node.js server\nnode signaler.js\n```\n\nNow, you can open port `12034` on your ip address/domain; or otherwise on localhost: `http://localhost:12034/`\n\nIt is using port `12034`; you can edit this port using following commands:\n\n```\nvi signaler.js\n\n# now edit port 12034\n# and save changes & quit\n\n# press \"insert\" key; then press \"Esc\" key and the type\n:wq\n```\n\n`:wq` command saves changes in the file and exits editing mode. If you don't want to save changes; simply type:\n\n```\n# if you don't want to save changes however want to exit editing mode\n:q\n```\n\nCommon Error: `Error: listen EADDRINUSE`. It means that same port is used by another application. You can close all existing processes running on same port:\n\n```\n// list all active processes running on same port\nsudo fuser -v 12034/tcp\n\n// kill all processes running on port \"12034\"\nsudo fuser -vk 12034/tcp\n\n// list again to verify closing ports\nsudo fuser -v 12034/tcp\n```\n\nYou can delete \"directory\" and re-install:\n\n```\nrm -rf websocket-over-nodejs\nmkdir websocket-over-nodejs\n\n# and following above steps to \"wget\" and \"tar\" then \"node\" to run!\n```\n\nFollowing error doesn't matter!!! Simply skip it!\n\n```\nWarning: Native modules not compiled.  XOR performance will be degraded.\nWarning: Native modules not compiled.  UTF-8 validation disabled.\n```\n\n=\n\n#### Download ZIP on windows\n\nhttp://www.webrtc-experiment.com/packages/websocket-over-nodejs.zip\n\n=\n\n#### Test Demos\n\n```\n// replace \"localhost\" with your domain name!\nhttp://localhost:12034/index.html\nhttp://localhost:12034/one-to-one-peerconnection.html\nhttp://localhost:12034/text-chat-with-simple-websocket.html\n```\n\n=\n\n#### If you want to deploy your application\n\nFirst of all; change **subdomain** in the `package.json` file:\n\n```\n{\n  \"name\": \"just-a-name\",\n  \"subdomain\": \"must-be-unique\",\n  \"scripts\": {\n    \"start\": \"signaler.js\"\n  },\n  main: \"signaler.js\",\n  \"version\": \"0.0.0\",\n  \"engines\": {\n    \"node\": \"0.10.x\"\n  },\n  \"dependencies\": {\n    \"websocket\": \"1.0.x\"\n  }\n}\n```\n\n1. Create an account at `nodejitsu`\n2. Use same **Node.js command prompt** window\n3. Type `jitsu deploy` \n\nand you're done!\n\n**Remember:** `jitsu deploy` command will deploy the entire directory containing all all files including `node_modules` (i.e. dependencies).\n\nNow, you can listen your nodejitsu server like this:\n\n```javascript\n// Remember, must include port \"80\"!\nvar websocket = new WebSocket('ws://subdomain.jit.su:80');\n\n// or\nvar websocket = new WebSocket('ws://subdomain.nodejitsu.com:80');\n\n// or SSL\nvar websocket = new WebSocket('wss://subdomain.nodejitsu.com:443');\n```\n\n=\n\n#### Signaler.js or SSL.js\n\n```javascript\n// setting room name\nvar channelName = location.href.replace(/\\/|:|#|%|\\.|\\[|\\]/g, ''); // using URL as room-name\n\n// setting up websocket connection\nvar websocket = new WebSocket('ws://localhost:12034');\n\n// capturing \"onopen\" event\nwebsocket.onopen = function () {\n    // suggesting node.js server to open a websocket room i.e. channel!\n    websocket.push(JSON.stringify({\n        open: true,\n        channel: channelName\n    }));\n};\n\n// overriding \"send\" method to customize default behavior!\nwebsocket.push = websocket.send;\nwebsocket.send = function (data) {\n    websocket.push(JSON.stringify({\n        data: data,\n        channel: channelName\n    }));\n};\n\n// capturing \"onmessage\" event!\nwebsocket.onmessage = function (e) {\n    console.log(JSON.parse(e.data));\n};\n```\n\n=\n\n#### How to use?\n\nIn `ui.js` files you can find `openSocket` method; or in all libraries; you can find `openSignalingChannel` method.\n\n```javascript\n// ws://wsnodejs.jit.su:80\n// wss://www.webrtc-experiment.com:8563\n\nvar SIGNALING_SERVER = 'ws://' + document.domain + ':12034/';\nconnection.openSignalingChannel = function(config) {\n    config.channel = config.channel || this.channel || 'default-channel';\n    var websocket = new WebSocket(SIGNALING_SERVER);\n    websocket.channel = config.channel;\n    websocket.onopen = function() {\n        websocket.push(JSON.stringify({\n            open: true,\n            channel: config.channel\n        }));\n        if (config.callback)\n            config.callback(websocket);\n    };\n    websocket.onmessage = function(event) {\n        config.onmessage(JSON.parse(event.data));\n    };\n    websocket.push = websocket.send;\n    websocket.send = function(data) {\n        websocket.push(JSON.stringify({\n            data: data,\n            channel: config.channel\n        }));\n    };\n}\n```\n\n=\n\nhttps://github.com/muaz-khan/WebRTC-Experiment/blob/master/Signaling.md\n\n=\n\n#### License\n\n[WebSocket over Node.js](https://github.com/muaz-khan/WebRTC-Experiment/blob/master/websocket-over-nodejs) is released under [MIT licence](https://webrtc-experiment.appspot.com/licence/) . Copyright (c) [Muaz Khan](https://plus.google.com/+MuazKhan).\n",
+  "readmeFilename": "README.md"
+}
